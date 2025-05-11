@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Tu Carrito</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Tu Carrito</h1>
+    <nav><a href="index.html">Volver a la tienda</a></nav>
+  </header>
+
+  <main>
+    <section id="cart-items" class="vinyl-list"></section>
+    <button id="buy" class="buy-btn">Comprar</button>
+  </main>
+
+  <footer><p>&copy; 2025 Vinilos Clásicos</p></footer>
+
+  <!-- Toast container -->
+  <div id="toast-box"></div>
+
+  <!-- Gestión del carrito + checkout -->
+  <script type="module">
+    import { API }   from './js/api.js';
+    import { toast } from './js/toast.js';
+
+    // ————————— Protección y rol —————————
+    const me = await API.me();
+    if (!me.user_id && !me.is_admin) {
+      toast('Debes iniciar sesión', true);
+      location.href = 'login.html';
+    }
+
+    const container = document.getElementById('cart-items');
+    const buyBtn    = document.getElementById('buy');
+
+    async function loadCart() {
+      const items = await API.listCart();
+      if (!items.length) {
+        container.innerHTML = '<p>Tu carrito está vacío.</p>';
+        buyBtn.disabled = true;
+        return;
+      }
+      buyBtn.disabled = false;
+      container.innerHTML = items.map(i => `
+        <article class="vinyl-item" data-id="${i.product_id}">
+          <h2>${i.title}</h2>
+          <p>Cantidad: ${i.qty}</p>
+          <button class="remove">Eliminar</button>
+        </article>`).join('');
+
+      container.querySelectorAll('.remove')
+        .forEach(b => b.addEventListener('click', eliminar));
+    }
+
+    async function eliminar(e) {
+      // Al eliminar no se diferencia admin/usuario, pero se podría bloquear aquí también
+      const id  = e.target.closest('.vinyl-item').dataset.id;
+      const res = await API.removeFromCart(id);
+      toast(res.message || res.error, !!res.error);
+      loadCart();
+    }
+
+    buyBtn.addEventListener('click', async () => {
+      // ——— Bloqueo para admin ———
+      if (me.is_admin) {
+        toast('Como administrador no puedes comprar', true);
+        return;
+      }
+      // Acción normal
+      const res = await API.checkout();
+      toast(res.message || res.error, !!res.error);
+      if (!res.error) loadCart();
+    });
+
+    loadCart();
+  </script>
+</body>
+</html>
