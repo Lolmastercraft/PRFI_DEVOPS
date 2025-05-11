@@ -105,7 +105,7 @@ resource "aws_security_group" "sg_jump" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # HTTP (80) – opcional para pruebas, público
+  # HTTP (80) 
   ingress {
     description = "HTTP test"
     from_port   = 80
@@ -114,7 +114,7 @@ resource "aws_security_group" "sg_jump" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # HTTPS (443) – si expones algo vía TLS
+  # HTTPS (443) 
   ingress {
     description = "HTTPS"
     from_port   = 443
@@ -148,7 +148,7 @@ resource "aws_security_group" "sg_linux_web" {
   # INGRESS
   #################################################
 
-  # SSH (22) – solo desde el Jump
+  # SSH (22)
   ingress {
     description              = "SSH desde Jump"
     from_port                = 22
@@ -175,7 +175,7 @@ resource "aws_security_group" "sg_linux_web" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # API interna (5000) – solo desde Jump (o mismo SG si usas docker‑compose)
+  # API interna (5000) 
   ingress {
     description     = "Flask API"
     from_port       = 5000
@@ -236,7 +236,6 @@ resource "aws_instance" "Linux_Web" {
   }
 }
 
-
 # Crear IP elástica
 resource "aws_eip" "jump_eip" {
   instance = aws_instance.WinJS.id
@@ -247,7 +246,6 @@ resource "aws_eip" "linux_eip" {
   instance = aws_instance.Linux_Web.id
   depends_on = [aws_internet_gateway.Pro_igw]
 }
-
 
 #OUTPUTS
 
